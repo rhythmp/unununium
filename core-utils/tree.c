@@ -1,8 +1,6 @@
 /* LICENSE INFO: TBD*/
 
-/* tiper - text editor */
-
-/* */
+/* tree - display directories in tree */
 
 //#include "utilbox.h"
 #include "tree.h"
@@ -10,7 +8,9 @@
 // NEED TO REMOVE THIS
 #include<stdio.h>
 #include<stdlib.h>
+#include<errno.h>
 
+//#define DEBUG_TREE
 
 #define VERSION 0
 #define REVISION 1
@@ -49,6 +49,8 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 	char *name = NULL;
 	char *path = NULL;
 	int len = strlen(path_to_root);
+	unsigned int level_display = level;// % 8;
+	struct stat sb;
 
 	path = (char *) malloc(len + (sizeof(char)*MAX_NAME_SIZE));
 	memset( (void *)path, '\0', len + (sizeof(char)*MAX_NAME_SIZE) );
@@ -58,22 +60,32 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 		if( strcmp( contents->d_name, "." ) && strcmp( contents->d_name, ".." ) ){
 			printf("\n");
 			name = contents->d_name;
-			for( loop = 1 ; loop < level; loop++ )
+			for( loop = 0 ; loop < level_display; loop++ )
 				printf("  |");
 			printf("%s", name);
 
-			//////////////////////////////////////////////////////////////////
-			
 			if(strcmp (path_to_root, "/") )
 				strcat( path, "/");
-			strcat(path, name);
-			strcat( path, "/"); printf("   =====>>%s",path);
+			strcat(path, name);// printf("   =====>>%s",path);
 			
-			/////////////////////////////////////////////////////////////////
 			ent = opendir( path );
+
+			#ifdef DEBUG_TREE
 			printf(" %d", (int) ent);
+			#endif
 			if( ent ){
-				directory_traverse( ent, path, level+1 );
+				lstat(path, &sb);
+			
+				if( !S_ISLNK(sb.st_mode) ){
+					directory_traverse( ent, path, level+1 );
+				}
+				closedir(ent);
+			}
+			else{
+				#ifdef DEBUG_TREE
+				if( !strcmp( "Too many open files" , strerror(errno) ) )
+				{printf(" error: %s %d", strerror(errno), level);	fflush(stdout);while(1);}
+				#endif
 			}
 			path[len] = '\0';
 				

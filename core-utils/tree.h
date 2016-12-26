@@ -1,6 +1,8 @@
 #include<string.h>
 #include<sys/types.h>
 #include<dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define MAX_NAME_SIZE 256
 #define LEVEL_1 1
