@@ -9,12 +9,17 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<errno.h>
+#include<limits.h>
+#include<getopt.h>
 
 //#define DEBUG_TREE
 
 #define VERSION 0
 #define REVISION 1
 #define TOOL_NAME "tree"
+
+#define OPT_HELP 1
+#define OPT_VERSION (1 << 1)
 
 static FILE *stream;
 static unsigned int maxrow, maxcol;
@@ -52,8 +57,8 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 	unsigned int level_display = level;// % 8;
 	struct stat sb;
 
-	path = (char *) malloc(len + (sizeof(char)*MAX_NAME_SIZE));
-	memset( (void *)path, '\0', len + (sizeof(char)*MAX_NAME_SIZE) );
+	path = (char *) malloc(len + (sizeof(char)*(NAME_MAX + 1)));
+	memset( (void *)path, '\0', len + (sizeof(char)*(NAME_MAX + 1)) );
 	strcpy( path, path_to_root );
 
 	while( contents = readdir(root) ){
@@ -100,22 +105,103 @@ void main(int argc, char **argv)
 {
 	char 	*root = NULL;
 	DIR 	*ent;
+	int opt = 0;
+	int long_index = 0;
+	int flags = 0;
 	
-	if( argc > 2 ){
+/*	if( argc > 2 ){
 		// CHANGE THE EXIT
 		printf("\n\tError\n\n");
 		exit(0);
 	}
+
 	else
+*/
+
+	static struct option long_options[] = {
+		{"help",	no_argument,	0,	0},
+		{"version",	no_argument,	0,	0},
+		{0,		0,		0,	0  },
+	};
+
+	
+	while((opt = getopt_long( argc, argv, "vf", long_options, &long_index)) != -1 ){
+
+		switch(opt){
+			case 0:
+				printf("\n\t%s", long_options[long_index].name);
+	
+				break;
+			case 'v':
+				printf("\n\tvvvv");
+				break;
+			case 'f':
+				printf("\n\tffff");
+				break;
+	
+			default:
+				printf("\n\tDDDD");
+				break;
+		}
+	}
+	
+	/*while( (opt = getopt_long( argc, argv, "", long_options, &long_index)) != -1){
+		switch(opt) {
+			case 'v':
+				printf("\n\tVersion...");
+				flags = OPT_VERSION;
+				fflush(stdout);
+				while(1);
+				break;
+			case 'h':
+				printf("\n\tHELP...");
+				flags = OPT_HELP;
+				fflush(stdout);
+				while(1);
+				break;
+			default:
+				break;
+		}
+	}
+
+	while ((opt = getopt(argc, argv, "vf")) != -1) {
+		switch (opt) {
+		
+		case 'v':
+		//	flags = OPT_VERSION;
+			printf("\n\tVvvvv...");
+			fflush(stdout);
+			while(1);
+			break;
+		case 'f':
+		//	flags = OPT_VERSION;
+			printf("\n\tfff...");
+			fflush(stdout);
+			while(1);
+			break;
+		default:
+		//	flags |= OPT_HELP;
+			printf("\n\tDddd...");
+			fflush(stdout);
+			while(1);
+			break;
+		}
+	}*/
+	
+		 
+
+	if( argc >2 ){
+
+	}	
 	if( argc == 2 ){
 		int len = strlen( argv[1] );
 		root = (char *)malloc( sizeof(char) * (len + 1 ));
 		strcpy( root , argv[1] );
 	}		
 	else{
-		root = (char *)malloc( sizeof(char) * 2 );
-		root[0] = '/';
-		root[1] = '\0';
+		root = (char *)malloc( sizeof(char) * PATH_MAX );
+		if( getcwd( root, PATH_MAX) == NULL){
+		}
 	}
 
 	ent = opendir(root);
