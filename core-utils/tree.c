@@ -1,6 +1,6 @@
 /* LICENSE INFO: TBD*/
 
-/* tree - display directories in tree */
+ /* tree - display directories in tree */
 
 //#include "utilbox.h"
 #include "tree.h"
@@ -42,8 +42,7 @@ static void usage()
 		"-v - Version\n"); 
 }
 
-static void print_version()
-{
+static void print_version(){
 	printf("%s version:%d.%d\n",TOOL_NAME, VERSION, REVISION);
 }
 
@@ -56,10 +55,24 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 	int len = strlen(path_to_root);
 	unsigned int level_display = level;// % 8;
 	struct stat sb;
+	DIR *root_count = root;
+	int Number_of_entries = 0;
 
 	path = (char *) malloc(len + (sizeof(char)*(NAME_MAX + 1)));
 	memset( (void *)path, '\0', len + (sizeof(char)*(NAME_MAX + 1)) );
 	strcpy( path, path_to_root );
+
+	// Counting the number of entries in the directory and then closing directory
+	while( contents = readdir(root_count)){
+		if( strcmp( contents->d_name, "." ) && strcmp( contents->d_name, ".." ) ){
+			Number_of_entries++;
+		}
+	}
+	closedir(root);
+	printf("===> Number of entries = %d", Number_of_entries);
+
+	// opening the directory for traversal
+	root = opendir(path_to_root);
 
 	while( contents = readdir(root) ){
 		if( strcmp( contents->d_name, "." ) && strcmp( contents->d_name, ".." ) ){
@@ -71,7 +84,7 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 
 			if(strcmp (path_to_root, "/") )
 				strcat( path, "/");
-			strcat(path, name);// printf("   =====>>%s",path);
+			strcat(path, name); //printf("   =====>>%d", contents->d_reclen);
 			
 			ent = opendir( path );
 
@@ -131,6 +144,10 @@ void main(int argc, char **argv)
 			case 0:
 				printf("\n\t%s", long_options[long_index].name);
 	
+				break;
+
+			case 'a':
+
 				break;
 			case 'v':
 				printf("\n\tvvvv");

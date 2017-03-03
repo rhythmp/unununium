@@ -1,0 +1,41 @@
+
+
+options:
+
+-a
+All files are printed
+
+-d
+List directories only.
+
+-f
+Prints the full path prefix for each file.
+
+-p
+Print the file type and permissions for each file (as per ls -l).
+
+-s
+Print the size of each file in bytes along with the name.
+
+-h
+Print the size of each file but in a more human readable way, e.g. appending a size letter for kilobytes (K), megabytes (M), gigabytes (G), terrabytes (T), petabytes (P) and exabytes (E).
+
+-u
+Print the username, or UID # if no username is available, of the file.
+
+-g
+Print the group name, or GID # if no group name is available, of the file.
+
+-D
+Print the date of the last modification time for the file listed.
+
+--inodes
+Prints the inode number of the file or directory
+--device
+Prints the device number to which the file or directory belongs
+
+-L level
+Max display depth of the directory tree.
+
+-o filename
+Send output to filename.
