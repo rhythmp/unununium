@@ -25,6 +25,8 @@ static FILE *stream;
 static unsigned int maxrow, maxcol;
 static unsigned int row, col;
 
+static const char SINGLE_OPTION[] = "adDfgpshu";
+
 /* TODO Change this */
 
 /*TODO Test this*/
@@ -120,7 +122,7 @@ void main(int argc, char **argv)
 	DIR 	*ent;
 	int opt = 0;
 	int long_index = 0;
-	int flags = 0;
+	unsigned int flags_option = 0;
 	
 /*	if( argc > 2 ){
 		// CHANGE THE EXIT
@@ -132,28 +134,62 @@ void main(int argc, char **argv)
 */
 
 	static struct option long_options[] = {
+		{"device",	no_argument,	0,	0},
+		{"inodes",	no_argument,	0,	0},
 		{"help",	no_argument,	0,	0},
 		{"version",	no_argument,	0,	0},
 		{0,		0,		0,	0  },
 	};
 
 	
-	while((opt = getopt_long( argc, argv, "vf", long_options, &long_index)) != -1 ){
+	while((opt = getopt_long( argc, argv, SINGLE_OPTION, long_options, &long_index)) != -1 ){
 
 		switch(opt){
 			case 0:
-				printf("\n\t%s", long_options[long_index].name);
-	
+//				printf("\n\t==%s", long_options[long_index].name);
+				if(!strcmp (long_options[long_index].name, "device")){
+
+					flags_option |= BIT_LONG_DEVICE;
+					printf("\n\t==%s", long_options[long_index].name);
+
+				}else if(!strcmp (long_options[long_index].name, "inodes")){
+
+					flags_option |= BIT_LONG_INODES;
+					printf("\n\t==%s", long_options[long_index].name);
+
+				}else if(!strcmp (long_options[long_index].name, "help")){
+
+					flags_option |= BIT_LONG_HELP;
+					printf("\n\t==%s", long_options[long_index].name);
+
+				}else if(!strcmp (long_options[long_index].name, "version")){
+
+					flags_option |= BIT_LONG_VERSION;
+					printf("\n\t==%s", long_options[long_index].name);
+
+				}
 				break;
 
 			case 'a':
-
+				flags_option |= BIT_A;
 				break;
-			case 'v':
-				printf("\n\tvvvv");
-				break;
+			// break not included for debug
+			case 'd':
+				flags_option |= BIT_A;
+			case 'D':
+				flags_option |= BIT_CAPS_D;
 			case 'f':
-				printf("\n\tffff");
+				flags_option |= BIT_F;
+			case 'g':
+				flags_option |= BIT_G;
+			case 'p':
+				flags_option |= BIT_P;
+			case 's':
+				flags_option |= BIT_S;
+			case 'h':
+				flags_option |= BIT_H;
+			case 'u':
+				flags_option |= BIT_U;
 				break;
 	
 			default:
@@ -161,7 +197,8 @@ void main(int argc, char **argv)
 				break;
 		}
 	}
-	
+
+	printf("\n\t==> flags = %d", flags_option);
 	/*while( (opt = getopt_long( argc, argv, "", long_options, &long_index)) != -1){
 		switch(opt) {
 			case 'v':
