@@ -24,7 +24,7 @@
 static FILE *stream;
 static unsigned int maxrow, maxcol;
 static unsigned int row, col;
-
+static unsigned int flags_option = 0;
 static const char SINGLE_OPTION[] = "adDfgpshu";
 
 /* TODO Change this */
@@ -59,6 +59,9 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 	struct stat sb;
 	DIR *root_count = root;
 	int Number_of_entries = 0;
+	struct dirent **dirent_traverse = NULL;
+	int loop_traverse = 0;
+	unsigned int i;
 
 	path = (char *) malloc(len + (sizeof(char)*(NAME_MAX + 1)));
 	memset( (void *)path, '\0', len + (sizeof(char)*(NAME_MAX + 1)) );
@@ -67,19 +70,38 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 	// Counting the number of entries in the directory and then closing directory
 	while( contents = readdir(root_count)){
 		if( strcmp( contents->d_name, "." ) && strcmp( contents->d_name, ".." ) ){
+			if( contents->d_name[0] == '.' )	// Can be hidden folder or file
+				if(!(flags_option & BIT_A) )
+					continue;
 			Number_of_entries++;
 		}
 	}
+
+	dirent_traverse = (struct dirent **) malloc(sizeof(struct dirent *) * Number_of_entries);
 	closedir(root);
 	printf("===> Number of entries = %d", Number_of_entries);
 
 	// opening the directory for traversal
 	root = opendir(path_to_root);
 
+	// store all entries in an array
 	while( contents = readdir(root) ){
 		if( strcmp( contents->d_name, "." ) && strcmp( contents->d_name, ".." ) ){
+			
+			if( contents->d_name[0] == '.' )	// Can be hidden folder or file
+				if(!(flags_option & BIT_A) )
+					continue;
+			dirent_traverse[loop_traverse] = contents;
+			loop_traverse++;
+		
+		}
+	}
+
+	
+	for( i = 0; i < loop_traverse; i++ ){
 			printf("\n");
-			name = contents->d_name;
+			name = dirent_traverse[i]->d_name;	
+			//name = contents->d_name;
 			for( loop = 0 ; loop < level_display; loop++ )
 				printf("  |");
 			printf("%s", name);
@@ -107,11 +129,12 @@ static void directory_traverse( DIR *root , const char *path_to_root, unsigned i
 				{printf(" error: %s %d", strerror(errno), level);	fflush(stdout);while(1);}
 				#endif
 			}
-			path[len] = '\0';
-				
-		}
+			path[len] = '\0'; // resetting for other path traversal
+		//	free(dirent_traverse[i]);		
+		
 	}
 	fflush(stdout);
+	free(dirent_traverse);
 	free(path);
 }
 
@@ -122,7 +145,7 @@ void main(int argc, char **argv)
 	DIR 	*ent;
 	int opt = 0;
 	int long_index = 0;
-	unsigned int flags_option = 0;
+	int number_of_options = 0;
 	
 /*	if( argc > 2 ){
 		// CHANGE THE EXIT
@@ -148,22 +171,22 @@ void main(int argc, char **argv)
 			case 0:
 //				printf("\n\t==%s", long_options[long_index].name);
 				if(!strcmp (long_options[long_index].name, "device")){
-
+					number_of_options++;
 					flags_option |= BIT_LONG_DEVICE;
 					printf("\n\t==%s", long_options[long_index].name);
 
 				}else if(!strcmp (long_options[long_index].name, "inodes")){
-
+					number_of_options++;
 					flags_option |= BIT_LONG_INODES;
 					printf("\n\t==%s", long_options[long_index].name);
 
 				}else if(!strcmp (long_options[long_index].name, "help")){
-
+					number_of_options++;
 					flags_option |= BIT_LONG_HELP;
 					printf("\n\t==%s", long_options[long_index].name);
 
 				}else if(!strcmp (long_options[long_index].name, "version")){
-
+					number_of_options++;
 					flags_option |= BIT_LONG_VERSION;
 					printf("\n\t==%s", long_options[long_index].name);
 
@@ -171,11 +194,14 @@ void main(int argc, char **argv)
 				break;
 
 			case 'a':
+				number_of_options++;
 				flags_option |= BIT_A;
 				break;
 			// break not included for debug
 			case 'd':
+				number_of_options++;
 				flags_option |= BIT_A;
+				break;
 			case 'D':
 				flags_option |= BIT_CAPS_D;
 			case 'f':
@@ -198,59 +224,14 @@ void main(int argc, char **argv)
 		}
 	}
 
-	printf("\n\t==> flags = %d", flags_option);
-	/*while( (opt = getopt_long( argc, argv, "", long_options, &long_index)) != -1){
-		switch(opt) {
-			case 'v':
-				printf("\n\tVersion...");
-				flags = OPT_VERSION;
-				fflush(stdout);
-				while(1);
-				break;
-			case 'h':
-				printf("\n\tHELP...");
-				flags = OPT_HELP;
-				fflush(stdout);
-				while(1);
-				break;
-			default:
-				break;
-		}
-	}
-
-	while ((opt = getopt(argc, argv, "vf")) != -1) {
-		switch (opt) {
-		
-		case 'v':
-		//	flags = OPT_VERSION;
-			printf("\n\tVvvvv...");
-			fflush(stdout);
-			while(1);
-			break;
-		case 'f':
-		//	flags = OPT_VERSION;
-			printf("\n\tfff...");
-			fflush(stdout);
-			while(1);
-			break;
-		default:
-		//	flags |= OPT_HELP;
-			printf("\n\tDddd...");
-			fflush(stdout);
-			while(1);
-			break;
-		}
-	}*/
-	
-		 
-
-	if( argc >2 ){
+	number_of_options = argc - number_of_options;
+	if( number_of_options > 2 ){
 
 	}	
-	if( argc == 2 ){
-		int len = strlen( argv[1] );
+	if( number_of_options == 2 ){
+		int len = strlen( argv[argc - 1] );
 		root = (char *)malloc( sizeof(char) * (len + 1 ));
-		strcpy( root , argv[1] );
+		strcpy( root , argv[argc - 1] );
 	}		
 	else{
 		root = (char *)malloc( sizeof(char) * PATH_MAX );
